@@ -1,0 +1,34 @@
+{
+  "name": "@openclaw/fly-chat",
+  "version": "2026.3.21",
+  "description": "fly-chat channel plugin for OpenClaw",
+  "type": "module",
+  "dependencies": {
+    "ws": "^8.18.0",
+    "zod": "^4.3.6"
+  },
+  "./plugin-sdk/fly-chat": {
+    "types": "./dist/plugin-sdk/fly-chat.d.ts",
+    "default": "./dist/plugin-sdk/fly-chat.js"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "setupEntry": "./setup-entry.ts",
+    "channel": {
+      "id": "fly-chat",
+      "label": "fly-chat",
+      "selectionLabel": "fly-chat",
+      "docsPath": "/channels/fly-chat",
+      "docsLabel": "fly-chat",
+      "blurb": "Connect fly-chat to OpenClaw via webhook or WebSocket",
+      "order": 90
+    },
+    "install": {
+      "npmSpec": "@openclaw/fly-chat",
+      "localPath": "extensions/fly-chat",
+      "defaultChoice": "npm"
+    }
+  }
+}

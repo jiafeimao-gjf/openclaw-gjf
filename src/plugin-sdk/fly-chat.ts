@@ -1,0 +1,17 @@
+// Narrow plugin-sdk surface for the fly-chat channel plugin.
+
+export { buildChannelConfigSchema } from "../channels/plugins/config-schema.js";
+export type { ChannelSetupAdapter } from "../channels/plugins/types.adapters.js";
+export {
+  isRequestBodyLimitError,
+  readRequestBodyWithLimit,
+  requestBodyErrorToText,
+} from "../infra/http-body.js";
+export { registerPluginHttpRoute } from "../plugins/http-registry.js";
+export type { OpenClawConfig } from "../config/config.js";
+export type { PluginRuntime } from "../plugins/runtime/types.js";
+export type { OpenClawPluginApi } from "../plugins/types.js";
+export { DEFAULT_ACCOUNT_ID } from "../routing/session-key.js";
+export type { FixedWindowRateLimiter } from "./webhook-memory-guards.js";
+export { createFixedWindowRateLimiter } from "./webhook-memory-guards.js";
+export { flyChatSetupAdapter, flyChatSetupWizard } from "../../extensions/fly-chat/setup-entry.js";

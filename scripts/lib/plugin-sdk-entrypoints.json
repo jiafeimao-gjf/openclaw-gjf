@@ -109,6 +109,7 @@
   "runtime-store",
   "secret-input",
   "signal-core",
+  "fly-chat",
   "synology-chat",
   "thread-ownership",
   "tlon",
