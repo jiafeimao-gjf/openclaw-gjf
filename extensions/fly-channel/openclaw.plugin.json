@@ -1,0 +1,9 @@
+{
+  "id": "fly-channel",
+  "channels": ["fly"],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

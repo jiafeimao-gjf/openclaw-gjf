@@ -5399,6 +5399,50 @@ export const GENERATED_BUNDLED_PLUGIN_METADATA = [
     },
   },
   {
+    dirName: "fly-channel",
+    idHint: "fly-channel",
+    source: {
+      source: "./index.ts",
+      built: "index.js",
+    },
+    setupSource: {
+      source: "./setup-entry.ts",
+      built: "setup-entry.js",
+    },
+    packageName: "@openclaw/fly-channel",
+    packageVersion: "2026.3.26",
+    packageDescription: "OpenClaw Fly channel plugin",
+    packageManifest: {
+      extensions: ["./index.ts"],
+      setupEntry: "./setup-entry.ts",
+      channel: {
+        id: "fly",
+        label: "Fly",
+        selectionLabel: "Fly (Custom Channel)",
+        docsPath: "/channels/fly",
+        docsLabel: "fly",
+        blurb: "Self-developed custom messaging channel.",
+        order: 80,
+        quickstartAllowFrom: true,
+      },
+      install: {
+        npmSpec: "@openclaw/fly-channel",
+        localPath: "extensions/fly-channel",
+        defaultChoice: "npm",
+        minHostVersion: ">=2026.3.26",
+      },
+    },
+    manifest: {
+      id: "fly-channel",
+      configSchema: {
+        type: "object",
+        additionalProperties: false,
+        properties: {},
+      },
+      channels: ["fly"],
+    },
+  },
+  {
     dirName: "github-copilot",
     idHint: "github-copilot",
     source: {

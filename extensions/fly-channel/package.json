@@ -1,0 +1,45 @@
+{
+  "name": "@openclaw/fly-channel",
+  "version": "2026.3.29",
+  "description": "OpenClaw Fly channel plugin",
+  "type": "module",
+  "dependencies": {
+    "ws": "^8.20.0"
+  },
+  "devDependencies": {
+    "openclaw": "workspace:*"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.3.29"
+  },
+  "peerDependenciesMeta": {
+    "openclaw": {
+      "optional": true
+    }
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "setupEntry": "./setup-entry.ts",
+    "channel": {
+      "id": "fly",
+      "label": "Fly",
+      "selectionLabel": "Fly (Custom Channel)",
+      "docsPath": "/channels/fly",
+      "docsLabel": "fly",
+      "blurb": "Self-developed custom messaging channel.",
+      "order": 80,
+      "quickstartAllowFrom": true
+    },
+    "install": {
+      "npmSpec": "@openclaw/fly-channel",
+      "localPath": "extensions/fly-channel",
+      "defaultChoice": "npm",
+      "minHostVersion": ">=2026.3.26"
+    },
+    "release": {
+      "publishToNpm": true
+    }
+  }
+}
