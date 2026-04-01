@@ -8,6 +8,7 @@ import { createPatchedAccountSetupAdapter } from "openclaw/plugin-sdk/setup";
 import WebSocket from "ws";
 import { FlyConfigSchema, type FlyAccountConfig } from "./config-schema.js";
 import type { ResolvedFlyAccount, FlyProbeResult } from "./runtime-api.js";
+import { monitorFlyChannel } from "./monitor.js";
 
 const meta = {
   id: "fly" as const,
@@ -224,6 +225,42 @@ export const flyPlugin: ChannelPlugin<ResolvedFlyAccount, FlyProbeResult> = crea
       },
       messaging: {
         normalizeTarget: normalizeFlyMessagingTarget,
+      },
+      gateway: {
+        startAccount: async (ctx) => {
+          const account = ctx.account;
+          const accountId = account.accountId ?? "default";
+          ctx.setStatus({
+            accountId,
+            running: true,
+          });
+          ctx.log?.info(`[${accountId}] starting fly channel`);
+          return monitorFlyChannel({
+            accountId,
+            config: ctx.cfg,
+            wsUrl: account.wsUrl ?? undefined,
+            authToken: account.token ?? undefined,
+            runtime: {
+              log: (...args: unknown[]) => ctx.log?.info?.(`[fly] ${String(args[0] ?? "")}`),
+              error: (...args: unknown[]) => ctx.log?.error?.(`[fly] ${String(args[0] ?? "")}`),
+            },
+            abortSignal: ctx.abortSignal,
+            statusSink: (patch) => {
+              ctx.setStatus({
+                accountId,
+                running: patch.connected,
+                connected: patch.connected,
+                lastConnectedAt: patch.lastConnectedAt,
+                lastDisconnect: patch.lastDisconnect
+                  ? { at: patch.lastDisconnect.at, status: patch.lastDisconnect.status, error: patch.lastDisconnect.error }
+                  : undefined,
+                lastError: patch.lastError,
+              });
+            },
+            reconnectDelayMs: account.config.reconnectDelayMs,
+            maxReconnectDelayMs: account.config.maxReconnectDelayMs,
+          });
+        },
       },
     },
     security: {

@@ -1,6 +1,7 @@
 // Private runtime barrel for the bundled Fly extension.
 
 import type { FlyAccountConfig } from "./config-schema.js";
+export { monitorFlyChannel } from "./monitor.js";
 
 export type FlyChannelRuntime = {
   wsUrl?: string;

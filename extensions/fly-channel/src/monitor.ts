@@ -5,6 +5,8 @@ type LocalRuntimeEnv = {
   exit?: (code: number) => never;
 };
 
+import type { MsgContext, ReplyDispatcher } from "openclaw/plugin-sdk/reply-runtime";
+import type { OpenClawConfig } from "openclaw/plugin-sdk/core";
 import type { ResolvedFlyAccount } from "./runtime-api.js";
 import type { FlyWsClient, FlyWebSocketMessage } from "./ws-client.js";
 import { createFlyWsClient } from "./ws-client.js";
@@ -13,7 +15,7 @@ export type MonitorFlyOpts = {
   wsUrl?: string;
   authToken?: string;
   accountId?: string;
-  config?: unknown;
+  config?: OpenClawConfig;
   runtime?: LocalRuntimeEnv;
   abortSignal?: AbortSignal;
   statusSink?: (patch: {
@@ -24,7 +26,16 @@ export type MonitorFlyOpts = {
   }) => void;
   reconnectDelayMs?: number;
   maxReconnectDelayMs?: number;
-  onMessage?: FlyInboundMessageHandler;
+  /**
+   * Handler for inbound messages. Called for each incoming message of type "message".
+   * The handler receives the parsed message context and should dispatch to AI and send reply.
+   */
+  onInbound?: (params: {
+    ctx: MsgContext;
+    dispatcher: ReplyDispatcher;
+    cfg: OpenClawConfig;
+    runtime: LocalRuntimeEnv;
+  }) => Promise<void>;
 };
 
 export type FlyInboundMessageHandler = (
@@ -74,6 +85,35 @@ export async function monitorFlyChannel(opts: MonitorFlyOpts = {}): Promise<void
     const content = msg.content;
 
     runtime.log?.(`[fly] Message from ${from}: ${content.slice(0, 50)}...`);
+
+    if (opts.onInbound) {
+      const messageId = msg.id ?? `fly-${Date.now()}-${from}`;
+      const ctx: MsgContext = {
+        Body: content,
+        RawBody: content,
+        CommandBody: content,
+        From: from,
+        To: "self",
+        SessionKey: `fly:${accountId}:${from}`,
+        AccountId: accountId,
+        MessageSid: messageId,
+        MessageSidFull: messageId,
+      };
+
+      const { createReplyDispatcherWithTyping } = await import(
+        "openclaw/plugin-sdk/reply-runtime"
+      );
+      const { dispatcher } = createReplyDispatcherWithTyping({
+        deliver: async (payload) => {
+          if (!flyClient) return;
+          const text = payload.text ?? "";
+          if (!text) return;
+          flyClient.sendText(from, text);
+        },
+      });
+
+      await opts.onInbound({ ctx, dispatcher, cfg: opts.config!, runtime });
+    }
   };
 
   flyClient = createFlyWsClient({
@@ -86,14 +126,7 @@ export async function monitorFlyChannel(opts: MonitorFlyOpts = {}): Promise<void
       error: (msg) => runtime.error?.(`[fly] ${msg}`),
     },
     onMessage: async (msg) => {
-      if (opts.onMessage) {
-        await opts.onMessage(msg, {
-          accountId,
-          wsClient: flyClient!,
-          runtime,
-          statusSink: opts.statusSink,
-        });
-      } else {
+      if (opts.onInbound) {
         await handleMessage(msg, {
           accountId,
           wsClient: flyClient!,
