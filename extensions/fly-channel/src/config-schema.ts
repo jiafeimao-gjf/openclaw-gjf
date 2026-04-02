@@ -6,6 +6,8 @@ const flyAccountSchema = z.object({
   enabled: z.boolean().optional(),
   /** WebSocket server URL (e.g., ws://localhost:8080 or wss://example.com/ws) */
   wsUrl: z.string().url().optional(),
+  /** User ID for WebSocket connection verification */
+  userId: z.string().optional(),
   /** Authentication token for the IM server */
   token: z.string().optional(),
   /** Read token from file path instead of config */

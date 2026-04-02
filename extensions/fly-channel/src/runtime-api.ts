@@ -18,6 +18,7 @@ export type ResolvedFlyAccount = {
   token?: string;
   tokenSource?: "config" | "env" | "file";
   wsUrl?: string;
+  userId?: string;
 };
 
 export type FlyProbeResult = {

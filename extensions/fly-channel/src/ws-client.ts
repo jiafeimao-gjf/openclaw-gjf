@@ -13,6 +13,7 @@ export type FlyWebSocketMessage = {
   timestamp?: number;
   metadata?: Record<string, unknown>;
   token?: string;
+  user_id?: string;
 };
 
 export type FlyWsStatus = {
@@ -44,6 +45,7 @@ export type FlyWsLike = {
 export type CreateFlyWsClientOpts = {
   wsUrl: string;
   authToken?: string;
+  authUserId?: string;
   abortSignal?: AbortSignal;
   statusSink?: (patch: {
     connected?: boolean;
@@ -77,6 +79,7 @@ export class FlyWsClient {
   private ws: FlyWsLike | null = null;
   private wsUrl: string;
   private authToken?: string;
+  private authUserId?: string;
   private abortSignal?: AbortSignal;
   private statusSink?: (patch: {
     connected?: boolean;
@@ -98,6 +101,7 @@ export class FlyWsClient {
   constructor(opts: CreateFlyWsClientOpts) {
     this.wsUrl = opts.wsUrl;
     this.authToken = opts.authToken;
+    this.authUserId = opts.authUserId;
     this.abortSignal = opts.abortSignal;
     this.statusSink = opts.statusSink;
     this.runtime = opts.runtime ?? { log: console.log, error: console.error };
@@ -140,7 +144,7 @@ export class FlyWsClient {
 
       this.ws.on("open", () => {
         this.opened = true;
-        this.runtime.log?.("[fly] WebSocket connected");
+        this.runtime.log?.("WebSocket connected");
         this.statusSink?.({
           connected: true,
           lastConnectedAt: Date.now(),
@@ -163,9 +167,9 @@ export class FlyWsClient {
           if (msg.type === "auth_ack") {
             const authResp = msg as { type: string; ok: boolean; error?: string; userId?: string };
             if (authResp.ok) {
-              this.runtime.log?.(`[fly] Authenticated, userId: ${authResp.userId}`);
+              this.runtime.log?.(`Authenticated, userId: ${authResp.userId}`);
             } else {
-              this.runtime.error?.(`[fly] Auth failed: ${authResp.error}`);
+              this.runtime.error?.(`Auth failed: ${authResp.error}`);
             }
             return;
           }
@@ -177,14 +181,14 @@ export class FlyWsClient {
 
           await this.onMessage(msg);
         } catch (err) {
-          this.runtime.error?.(`[fly] Message handler error: ${String(err)}`);
+          this.runtime.error?.(`Message handler error: ${String(err)}`);
         }
       });
 
       this.ws.on("close", (code, reason) => {
         this.opened = false;
         const message = reasonToString(reason);
-        this.runtime.log?.(`[fly] WebSocket closed: code=${code} reason=${message}`);
+        this.runtime.log?.(`WebSocket closed: code=${code} reason=${message}`);
         this.statusSink?.({
           connected: false,
           lastDisconnect: {
@@ -201,7 +205,7 @@ export class FlyWsClient {
 
       this.ws.on("error", (err) => {
         const errStr = String(err);
-        this.runtime.error?.(`[fly] WebSocket error: ${errStr}`);
+        this.runtime.error?.(`WebSocket error: ${errStr}`);
         this.statusSink?.({
           lastError: errStr,
         });
@@ -228,13 +232,13 @@ export class FlyWsClient {
     }
 
     const delay = this.calculateReconnectDelay();
-    this.runtime.log?.(`[fly] Reconnecting in ${Math.round(delay / 1000)}s...`);
+    this.runtime.log?.(`Reconnecting in ${Math.round(delay / 1000)}s...`);
     this.reconnectTimeout = setTimeout(() => {
       this.reconnectTimeout = undefined;
       this.abortHandler &&
         this.abortSignal?.addEventListener("abort", this.abortHandler, { once: true });
       this.doConnect().catch((err) => {
-        this.runtime.error?.(`[fly] Reconnect failed: ${String(err)}`);
+        this.runtime.error?.(`Reconnect failed: ${String(err)}`);
       });
     }, delay);
   }
@@ -247,19 +251,19 @@ export class FlyWsClient {
   }
 
   private sendAuth(token: string): void {
-    this.send({ type: "auth", token });
+    this.send({ type: "auth", token, user_id: this.authUserId });
   }
 
   send(msg: FlyWebSocketMessage): boolean {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      this.runtime.error?.("[fly] Cannot send: WebSocket not connected");
+      this.runtime.error?.("Cannot send: WebSocket not connected");
       return false;
     }
     try {
       this.ws.send(JSON.stringify({ ...msg, seq: this.seq++ }));
       return true;
     } catch (err) {
-      this.runtime.error?.(`[fly] Send error: ${String(err)}`);
+      this.runtime.error?.(`Send error: ${String(err)}`);
       return false;
     }
   }
@@ -290,7 +294,7 @@ export class FlyWsClient {
     try {
       return JSON.parse(raw) as FlyWebSocketMessage;
     } catch {
-      this.runtime.error?.(`[fly] Failed to parse message: ${raw}`);
+      this.runtime.error?.(`Failed to parse message: ${raw}`);
       return null;
     }
   }

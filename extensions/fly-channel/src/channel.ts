@@ -83,6 +83,7 @@ function resolveFlyAccount(
     name: rawAccountConfig?.name,
     enabled: rawAccountConfig?.enabled,
     wsUrl: rawAccountConfig?.wsUrl,
+    userId: rawAccountConfig?.userId,
     token: rawAccountConfig?.token,
     tokenFile: rawAccountConfig?.tokenFile,
     dmPolicy: rawAccountConfig?.dmPolicy ?? "pairing",
@@ -100,6 +101,7 @@ function resolveFlyAccount(
     token,
     tokenSource,
     wsUrl,
+    userId: rawAccountConfig?.userId,
   };
 }
 
@@ -235,14 +237,17 @@ export const flyPlugin: ChannelPlugin<ResolvedFlyAccount, FlyProbeResult> = crea
             running: true,
           });
           ctx.log?.info(`[${accountId}] starting fly channel`);
+          ctx.log?.info(`[${ account.userId}] starting fly channel`);
+          ctx.log?.info(`[${ account.token}] starting fly channel`);
           return monitorFlyChannel({
             accountId,
             config: ctx.cfg,
             wsUrl: account.wsUrl ?? undefined,
             authToken: account.token ?? undefined,
+            authUserId: account.userId ?? undefined,
             runtime: {
-              log: (...args: unknown[]) => ctx.log?.info?.(`[fly] ${String(args[0] ?? "")}`),
-              error: (...args: unknown[]) => ctx.log?.error?.(`[fly] ${String(args[0] ?? "")}`),
+              log: (...args: unknown[]) => ctx.log?.info?.(`${String(args[0] ?? "")}`),
+              error: (...args: unknown[]) => ctx.log?.error?.(`${String(args[0] ?? "")}`),
             },
             abortSignal: ctx.abortSignal,
             statusSink: (patch) => {

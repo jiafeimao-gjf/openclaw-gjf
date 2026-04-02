@@ -14,6 +14,7 @@ import { createFlyWsClient } from "./ws-client.js";
 export type MonitorFlyOpts = {
   wsUrl?: string;
   authToken?: string;
+  authUserId?: string;
   accountId?: string;
   config?: OpenClawConfig;
   runtime?: LocalRuntimeEnv;
@@ -119,6 +120,7 @@ export async function monitorFlyChannel(opts: MonitorFlyOpts = {}): Promise<void
   flyClient = createFlyWsClient({
     wsUrl,
     authToken,
+    authUserId: opts.authUserId,
     abortSignal,
     statusSink: opts.statusSink,
     runtime: {
